@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AdaptiveTrust zero-trust mobile gateway administration portal. Real-time telemetry monitoring, company invitation workflows, and admin trust override controls.">
+    <title>AdaptiveTrust Admin & Simulation Portal</title>
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Main SPA Container -->
+    <main id="app">
+
+        <!-- 1. AUTHENTICATION SECTION -->
+        <section id="view-auth" class="view-panel active">
+            <div class="glass-card auth-container">
+                <header class="auth-header">
+                    <button type="button" class="btn-settings-gear" onclick="openBackendSettingsModal()" title="Backend Server Connection Settings">⚙️</button>
+                    <h1 class="logo-title">AdaptiveTrust</h1>
+                    <p class="logo-subtitle">Zero Trust Gateway Center</p>
+                </header>
+
+                <!-- Navigation tabs for forms -->
+                <div class="auth-tabs" role="tablist">
+                    <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')" role="tab" aria-selected="true">Login</button>
+                    <button class="auth-tab" id="tab-admin-signup" onclick="switchAuthTab('admin-signup')" role="tab" aria-selected="false">Admin Sign Up</button>
+                    <button class="auth-tab" id="tab-emp-signup" onclick="switchAuthTab('emp-signup')" role="tab" aria-selected="false">Employee Sign Up</button>
+                    <button class="auth-tab" id="tab-verify" onclick="switchAuthTab('verify')" role="tab" aria-selected="false" style="display: none;">Verify Email</button>
+                </div>
+
+                <!-- Form 1: Login -->
+                <form id="form-login" class="auth-form active" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" required placeholder="name@company.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Sign In</span>
+                    </button>
+                </form>
+
+                <!-- Form 2: Admin Sign Up -->
+                <form id="form-admin-signup" class="auth-form" onsubmit="handleAdminSignUp(event)">
+                    <div class="input-group">
+                        <label for="admin-name">Full Name</label>
+                        <input type="text" id="admin-name" placeholder="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label for="admin-email">Corporate Email</label>
+                        <input type="email" id="admin-email" placeholder="admin@secure.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="admin-password">Password</label>
+                        <input type="password" id="admin-password" placeholder="Min. 8 characters">
+                    </div>
+                    <div class="input-group">
+                        <label for="admin-company">Company Name</label>
+                        <input type="text" id="admin-company" placeholder="Acme Corp">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Create Company Workspace</span>
+                    </button>
+                </form>
+
+                <!-- Form 3: Employee Sign Up -->
+                <form id="form-emp-signup" class="auth-form" onsubmit="handleEmployeeSignUp(event)">
+                    <div class="input-group">
+                        <label for="emp-name">Full Name</label>
+                        <input type="text" id="emp-name" placeholder="Alice Worker">
+                    </div>
+                    <div class="input-group">
+                        <label for="emp-email">Corporate Email</label>
+                        <input type="email" id="emp-email" placeholder="alice@company.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="emp-password">Password</label>
+                        <input type="password" id="emp-password" placeholder="••••••••">
+                    </div>
+                    <div class="input-group">
+                        <label for="emp-code">8-Character Invite Code</label>
+                        <input type="text" id="emp-code" maxlength="8" placeholder="ABC123XY" style="text-transform: uppercase;">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Register Device Profile</span>
+                    </button>
+                </form>
+
+                <!-- Form 4: Email Verification OTP -->
+                <form id="form-verify" class="auth-form" onsubmit="handleVerifyEmail(event)">
+                    <div class="input-group text-center" style="text-align: center; margin-bottom: 20px;">
+                        <p class="text-muted" style="margin-bottom: 6px; font-size: 0.95rem;">Enter the 6-digit verification code sent to:</p>
+                        <p class="text-bold" id="verify-display-email" style="font-size: 1.1rem; color: #38bdf8; font-weight: 600;">name@company.com</p>
+                    </div>
+                    <input type="hidden" id="verify-email-hidden">
+                    <div class="input-group">
+                        <label for="verify-otp">6-Digit Verification Code</label>
+                        <input type="text" id="verify-otp" required maxlength="6" placeholder="123456" style="font-family: 'Fira Code', monospace; letter-spacing: 6px; font-size: 1.5rem; text-align: center; text-transform: uppercase;">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>Verify & Activate Account</span>
+                    </button>
+                    <div style="margin-top: 18px; display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <button type="button" class="btn-link" onclick="handleResendCode()" style="background: none; border: none; color: #818cf8; cursor: pointer; font-weight: 500;">Resend Code</button>
+                        <button type="button" class="btn-link" onclick="switchAuthTab('login')" style="background: none; border: none; color: #94a3b8; cursor: pointer;">Back to Login</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. ADMIN DASHBOARD VIEW -->
+        <section id="view-admin" class="view-panel">
+            <header class="app-navbar">
+                <div class="nav-branding">
+                    <span class="nav-logo">AdaptiveTrust</span>
+                    <span class="badge badge-cyan">ADMIN CENTER</span>
+                </div>
+                <div class="nav-user-info">
+                    <span id="admin-user-display" class="nav-user-name">Loading...</span>
+                    <span id="admin-company-display" class="nav-company-name">Workspace</span>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="openBackendSettingsModal()" title="Backend Connection Settings">⚙️ Server</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Top Aggregates row -->
+                <div class="metrics-grid">
+                    <div class="glass-card metric-card border-cyan">
+                        <p class="metric-title">Total Tenant Users</p>
+                        <p class="metric-value text-cyan" id="metric-total-users">0</p>
+                    </div>
+                    <div class="glass-card metric-card border-green">
+                        <p class="metric-title">Active Devices</p>
+                        <p class="metric-value text-green" id="metric-active-users">0</p>
+                    </div>
+                    <div class="glass-card metric-card border-red animate-pulse-border">
+                        <p class="metric-title">Risk Alerts</p>
+                        <p class="metric-value text-red" id="metric-risk-alerts">0</p>
+                    </div>
+                </div>
+
+                <!-- Main dashboard splits -->
+                <div class="layout-grid">
+                    <!-- Left: Employee Directory -->
+                    <div class="glass-card directory-panel">
+                        <header class="panel-header">
+                            <h2>Corporate Employee Directory</h2>
+                            <div class="filter-bar">
+                                <select id="admin-filter-role" class="input-select" onchange="loadAdminDirectory()">
+                                    <option value="">All Roles</option>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="EMPLOYEE">Worker</option>
+                                </select>
+                                <select id="admin-sort-by" class="input-select" onchange="loadAdminDirectory()">
+                                    <option value="score_desc">Score: High to Low</option>
+                                    <option value="score_asc">Score: Low to High</option>
+                                </select>
+                            </div>
+                        </header>
+
+                        <div class="directory-list-container">
+                            <table class="directory-table" id="directory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Score</th>
+                                        <th>Status</th>
+                                        <th>Last Location</th>
+                                        <th>Last Seen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="directory-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No data loaded.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Live SSE Stream Log -->
+                    <div class="glass-card live-stream-panel">
+                        <header class="panel-header">
+                            <h2 class="stream-title">
+                                <span class="pulse-indicator"></span>
+                                Real-Time Telemetry Feed
+                            </h2>
+                            <button class="btn btn-sm btn-outline" onclick="clearLiveFeed()">Clear Feed</button>
+                        </header>
+                        <div class="stream-feed-terminal" id="live-stream-feed">
+                            <div class="stream-log-entry system-msg">
+                                <span class="log-time">[System]</span> Stream idle. Waiting for telemetry check-ins...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Action Modal (Overrides) -->
+            <div id="admin-modal" class="modal">
+                <div class="modal-content glass-card">
+                    <header class="modal-header">
+                        <h3 id="modal-employee-name">Employee Admin Controls</h3>
+                        <button class="modal-close" onclick="closeAdminModal()">&times;</button>
+                    </header>
+                    <div class="modal-body">
+                        <div class="employee-meta-panel">
+                            <p><strong>Email:</strong> <span id="modal-employee-email">-</span></p>
+                            <p><strong>Device Status:</strong> <span id="modal-employee-status">-</span></p>
+                            <p><strong>Current Score:</strong> <span id="modal-employee-score" class="text-bold">-</span></p>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-block btn-success" onclick="triggerBoostOverride()">
+                                BOOST TRUST TO 100
+                            </button>
+                            <button class="btn btn-block btn-warning text-dark" onclick="triggerMfaOverride()">
+                                FORCE MFA CHALLENGE
+                            </button>
+                            <button class="btn btn-block btn-danger" onclick="triggerLockOverride()">
+                                SUSPEND ACCOUNT (REVOKE SESSIONS)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. EMPLOYEE SELF-SERVICE VIEW -->
+        <section id="view-employee" class="view-panel">
+            <header class="app-navbar">
+                <div class="nav-branding">
+                    <span class="nav-logo">AdaptiveTrust</span>
+                    <span class="badge badge-purple">EMPLOYEE GATEWAY</span>
+                </div>
+                <div class="nav-user-info">
+                    <span id="employee-user-display" class="nav-user-name">Loading...</span>
+                    <span id="employee-company-display" class="nav-company-name">Workspace</span>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="openBackendSettingsModal()" title="Backend Connection Settings">⚙️ Server</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <div class="layout-grid">
+                    <!-- Left: Trust Gauge & Timeline History -->
+                    <div class="employee-left-col">
+                        <!-- Score Card with Dial -->
+                        <div class="glass-card employee-score-card">
+                            <h2>My Trust Profile</h2>
+                            <div class="gauge-container">
+                                <svg class="gauge-svg" viewBox="0 0 200 200">
+                                    <!-- Background Circle Track -->
+                                    <circle class="gauge-bg" cx="100" cy="100" r="85" />
+                                    <!-- Animated Score Arc -->
+                                    <circle class="gauge-arc" id="gauge-arc-filled" cx="100" cy="100" r="85" style="stroke-dasharray: 534; stroke-dashoffset: 534;" />
+                                </svg>
+                                <div class="gauge-center">
+                                    <span id="gauge-score-value">0</span>
+                                    <span id="gauge-status-value" class="badge">UNKNOWN</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Historical Timeline Logs -->
+                        <div class="glass-card timeline-card">
+                            <header class="panel-header">
+                                <h2>Security Event History</h2>
+                            </header>
+                            <div class="timeline-list" id="timeline-list">
+                                <div class="text-center text-muted py-4">No events found.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Telemetry Simulator -->
+                    <div class="employee-right-col">
+                        <div class="glass-card simulator-card">
+                            <header class="panel-header">
+                                <h2>Device Telemetry Simulator</h2>
+                                <span class="badge badge-purple">SANDBOX</span>
+                            </header>
+                            <p class="panel-desc">Simulate device coordinate changes and security configurations to trigger the trust engine scoring rules.</p>
+                            
+                            <form id="form-telemetry-sim" onsubmit="submitSimulatedTelemetry(event)">
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="sim-lat">GPS Latitude</label>
+                                        <input type="number" id="sim-lat" step="0.0001" value="37.7749" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="sim-lon">GPS Longitude</label>
+                                        <input type="number" id="sim-lon" step="0.0001" value="-122.4194" required>
+                                    </div>
+                                </div>
+
+                                <div class="preset-buttons">
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="loadSimPreset('sf')">San Francisco Preset</button>
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="loadSimPreset('nyc')">New York Preset</button>
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="loadSimPreset('london')">London Preset (Impossible Flight)</button>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="sim-device">Device Integrity Status</label>
+                                    <select id="sim-device" class="input-select">
+                                        <option value="SECURE">SECURE (Standard Check-in)</option>
+                                        <option value="ROOTED">ROOTED (Anomaly Detected)</option>
+                                        <option value="EMULATOR">EMULATOR (Virtual Machine)</option>
+                                        <option value="TAMPERED">TAMPERED (Insecure Environment)</option>
+                                    </select>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="sim-activity">Activity Context</label>
+                                    <select id="sim-activity" class="input--select">
+                                        <option value="CHECKIN">Routine Location Sync</option>
+                                        <option value="ANOMALOUS_SYNC">Threat Database Sync</option>
+                                        <option value="API_ACCESS">Financial API Call</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-block btn-purple">
+                                    Send Telemetry Log
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Log Detail Modal -->
+            <div id="employee-modal" class="modal">
+                <div class="modal-content glass-card">
+                    <header class="modal-header">
+                        <h3>Event Details & Audit Trail</h3>
+                        <button class="modal-close" onclick="closeEmployeeModal()">&times;</button>
+                    </header>
+                    <div class="modal-body">
+                        <div class="detail-grid">
+                            <p><strong>Log ID:</strong> <span id="log-detail-id">-</span></p>
+                            <p><strong>Timestamp:</strong> <span id="log-detail-time">-</span></p>
+                            <p><strong>Score Transition:</strong> <span id="log-detail-transition" class="text-bold">-</span></p>
+                            <p><strong>Change Rationale:</strong></p>
+                            <div class="rationale-box" id="log-detail-cause">
+                                -
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SUPER ADMIN SYSTEM PORTAL VIEW -->
+        <section id="view-super-admin" class="view-panel">
+            <nav class="navbar glass-card">
+                <div class="navbar-brand">
+                    <span class="logo-icon">👑</span>
+                    <span class="logo-text">Platform Super Admin System Portal</span>
+                </div>
+                <div class="navbar-user">
+                    <span id="super-admin-user-display" class="user-badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">yogaroh16@gmail.com</span>
+                    <button class="btn btn-sm btn-outline" onclick="openBackendSettingsModal()" title="Backend Connection Settings">⚙️ Server</button>
+                    <button class="btn btn-sm btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+
+            <div class="dashboard-content">
+                <!-- Metrics Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Workspaces</span>
+                            <span class="metric-icon">🏢</span>
+                        </div>
+                        <div class="metric-value" id="super-metric-companies">0</div>
+                        <div class="metric-footer text-muted">Registered Companies</div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Global Platform Users</span>
+                            <span class="metric-icon">👥</span>
+                        </div>
+                        <div class="metric-value text-cyan" id="super-metric-users">0</div>
+                        <div class="metric-footer text-muted" id="super-metric-users-breakdown">0 Admins, 0 Employees</div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Verified Accounts</span>
+                            <span class="metric-icon">✅</span>
+                        </div>
+                        <div class="metric-value text-green" id="super-metric-verified">0</div>
+                        <div class="metric-footer text-muted">Email Verified Users</div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Avg Platform Posture</span>
+                            <span class="metric-icon">🛡️</span>
+                        </div>
+                        <div class="metric-value text-purple" id="super-metric-score">100</div>
+                        <div class="metric-footer text-muted">Global Trust Index</div>
+                    </div>
+                </div>
+
+                <!-- Global Workspaces & Tenants Table -->
+                <div class="glass-card" style="padding: 1.5rem; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Registered Corporate Workspaces</h3>
+                        <button class="btn btn-sm btn-primary" onclick="loadSuperAdminData()">🔄 Refresh System Data</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Workspace Name</th>
+                                    <th>Invite Code</th>
+                                    <th>Admin Contact</th>
+                                    <th>Employees Count</th>
+                                    <th>Tenant Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="super-companies-tbody">
+                                <tr><td colspan="6" class="text-center text-muted">Loading registered workspaces...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Global Users Directory Table -->
+                <div class="glass-card" style="padding: 1.5rem; margin-top: 1.5rem;">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Global Registered Users Directory</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User Details</th>
+                                    <th>Company Workspace</th>
+                                    <th>Role</th>
+                                    <th>Trust Score</th>
+                                    <th>Status</th>
+                                    <th>Email Verified</th>
+                                    <th>Last Active</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="super-users-tbody">
+                                <tr><td colspan="8" class="text-center text-muted">Loading user accounts...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. BACKEND SERVER CONFIGURATION MODAL -->
+        <div id="backend-settings-modal" class="modal">
+            <div class="modal-content glass-card" style="max-width: 440px; padding: 1.75rem;">
+                <header class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700;">Backend settings</h3>
+                    <button class="modal-close" onclick="closeBackendSettingsModal()">&times;</button>
+                </header>
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label for="settings-api-url" style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Backend API Base URL</label>
+                        <input type="text" id="settings-api-url" placeholder="https://your-backend.up.railway.app/api/v1" style="background: rgba(10, 14, 23, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); padding: 12px 14px; border-radius: 10px; font-size: 0.95rem;">
+                        <small style="color: var(--text-muted); font-size: 0.82rem; margin-top: 8px; display: block;">Default: Cloud Railway URL</small>
+                    </div>
+
+                    <div id="connection-status-box" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button type="button" class="btn btn-primary btn-block" style="padding: 13px; font-size: 1rem; font-weight: 700; border-radius: 10px;" onclick="saveBackendSettings()">
+                            Save & Reload
+                        </button>
+                        <button type="button" class="btn btn-outline btn-block" style="padding: 13px; font-size: 1rem; font-weight: 600; border-radius: 10px; border-color: rgba(255, 255, 255, 0.15);" onclick="resetBackendSettingsToDefault()">
+                            Reset to Default
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Notification System Toast -->
+    <div id="toast" class="toast">
+        <span id="toast-message">Message</span>
+    </div>
+
+    <!-- Main Javascript Config & App -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
